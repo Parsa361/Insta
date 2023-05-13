@@ -21,7 +21,15 @@ const showModal = () => {
 };
 
 const handleOk = async (e) => {
-    await userStore.handleSignup(userCredentials)
+    if (props.isLogin) {
+        await userStore.handleLogin({
+            email: userCredentials.email,
+            password: userCredentials.password
+        });
+    } else {
+        await userStore.handleSignup(userCredentials);
+    }
+
     if (user.value) {
         clearUserCredential();
         visible.value = false;
