@@ -7,6 +7,7 @@ export const useUserStore = defineStore('users', () => {
   const user = ref(null);
   const errorMsg = ref('');
   const loading = ref(false);
+  const loadingUser = ref(false);
 
   const validateEmail = (email) => {
     return String(email)
@@ -16,9 +17,45 @@ export const useUserStore = defineStore('users', () => {
       );
   };
 
-  const handleLogin = () => {
+  const handleLogin = async (credentials) => {
+    const { email, password } = credentials
+
+    if (!validateEmail(email)) {
+      return errorMsg.value = 'Email is invalid';
+    }
+    if (!password.length) {
+      return errorMsg.value = "Password can not be empty";
+    }
+    loading.value = true;
+
+    const { error, data } = await supabase.auth.signInWithPassword({
+      email,
+      password
+    });
+
+    if (error) {
+      loading.value = false;
+      errorMsg.value = error.message;
+    }
+
+    const { data: existingUser } = await supabase
+      .from('users')
+      .select()
+      .eq('email', email)
+      .single()
+
+    user.value = {
+      email: existingUser.email,
+      username: existingUser.username,
+      id: existingUser.id
+    }
+    console.log('this is user: ' , user.value);
+    loading.value = false;
+    errorMsg.value = ''
 
   }
+
+
   const handleSignup = async (credentials) => {
     const { email, password, username } = credentials;
 
@@ -79,14 +116,38 @@ export const useUserStore = defineStore('users', () => {
     loading.value = false;
 
   }
-  const handleLogout = () => {
 
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    user.value = null
   }
-  const getUser = () => {
 
+  const getUser = async () => {
+    loadingUser.value = true
+    const { data, error } = await supabase.auth.getUser();
+
+    if (!data.user) {
+      loadingUser.value = false;
+      return user.value = null;
+    }
+
+
+    const { data: userWithEmail } = await supabase
+      .from('users')
+      .select()
+      .eq('email', data.user.email)
+      .single()
+
+    user.value = {
+      username: userWithEmail.username,
+      email: userWithEmail.email,
+      id: userWithEmail.id
+    }
+    loadingUser.value = false;
   }
+
   const clearErrorMsg = () => {
     errorMsg.value = ''
   }
-  return { user, errorMsg, loading, handleLogin, handleSignup, handleLogout, getUser, clearErrorMsg }
+  return { user, errorMsg, loading, loadingUser, handleLogin, handleSignup, handleLogout, getUser, clearErrorMsg }
 })
