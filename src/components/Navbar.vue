@@ -1,14 +1,29 @@
 <script setup>
 import Container from './Container.vue'
 import AuthModal from './AuthModal.vue'
-import { RouterLink } from 'vue-router';
+import { RouterLink, useRouter } from 'vue-router';
 import { ref } from 'vue';
+import { useUserStore } from '../stores/users';
+import { storeToRefs } from 'pinia';
 
 const searchUsername = ref('')
-const isAuthenticated = ref(false)
+const router = useRouter()
+const useStore = useUserStore()
+
+const { user, loadingUser } = storeToRefs(useStore)
 
 const onSearch = () => {
+    if (searchUsername.value) {
+        router.push(`/profile/${searchUsername.value}`)
+    }
+}
 
+const handleLogout = async () => {
+    await useStore.handleLogout()
+}
+
+const goToUserProfile = () => {
+    router.push(`/profile/${user.value.username}`)
 }
 </script>
 
@@ -21,13 +36,15 @@ const onSearch = () => {
                     <AInputSearch v-model:value="searchUsername" placeholder="username..." style="width: 200px"
                         @search="onSearch" />
                 </div>
-                <div class="left-content" v-if="!isAuthenticated">
-                    <AuthModal :isLogin="false" />
-                    <AuthModal :isLogin="true" />
-                </div>
-                <div class="left-content" v-else>
-                    <AButton type="primary">Profile</AButton>
-                    <AButton type="primary">Logout</AButton>
+                <div class="content" v-if="!loadingUser">
+                    <div class="left-content" v-if="!user">
+                        <AuthModal :isLogin="false" />
+                        <AuthModal :isLogin="true" />
+                    </div>
+                    <div class="left-content" v-else>
+                        <AButton type="primary" @click="goToUserProfile">Profile</AButton>
+                        <AButton type="primary" @click="handleLogout">Logout</AButton>
+                    </div>
                 </div>
             </div>
 
@@ -40,6 +57,11 @@ const onSearch = () => {
 .nav-container {
     display: flex;
     justify-content: space-between;
+    align-items: center;
+}
+
+.content {
+    display: flex;
     align-items: center;
 }
 
