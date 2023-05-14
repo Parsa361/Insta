@@ -1,36 +1,39 @@
 <script setup>
-import Card from './Card.vue';
+import Cards from './Cards.vue';
 import Container from './Container.vue';
+import { useUserStore } from '../stores/users'
+import { storeToRefs } from 'pinia';
+import LoginMessage from './LoginMessage.vue';
 
-const data = [
-    {
-        id: 1,
-        url: 'https://picsum.photos/201',
-        title: 'selena gomez',
-        caption: 'This is the first image',
-    },
-    {
-        id: 2,
-        url: 'https://picsum.photos/200',
-        title: 'Image 2',
-        caption: 'This is the second image',
-    }
-];
+const userStore = useUserStore()
+const { user, loadingUser } = storeToRefs(userStore)
+
 </script>
 
 <template>
     <Container>
-        <div class="timeline-container">
-            <Card v-for="post in data" :key="post.id" :post="post" />
+        <div v-if="!loadingUser">
+            <Cards v-if="user" />
+            <LoginMessage v-else />
+        </div>
+        <div v-else class="spinner">
+            <ASpin />
         </div>
     </Container>
 </template>
 
-<style scoped>
+<style>
 .timeline-container {
     display: flex;
     flex-direction: column;
     justify-content: center;
     align-items: center;
+}
+
+.spinner {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 90vh;
 }
 </style>
