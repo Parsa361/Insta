@@ -16,6 +16,8 @@ const onSearch = () => {
     if (searchUsername.value) {
         router.push(`/profile/${searchUsername.value}`)
     }
+    searchUsername.value = ''
+
 }
 
 const handleLogout = async () => {
