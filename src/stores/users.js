@@ -49,7 +49,7 @@ export const useUserStore = defineStore('users', () => {
       username: existingUser.username,
       id: existingUser.id
     }
-    console.log('this is user: ' , user.value);
+
     loading.value = false;
     errorMsg.value = ''
 
