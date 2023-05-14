@@ -13,17 +13,22 @@ const route = useRoute()
 
 const { username: profileUsername } = route.params
 
-const props = defineProps(['user', 'userInfo', 'addNewPost', 'isFollowing'])
+const props = defineProps(['user', 'userInfo', 'addNewPost', 'isFollowing', 'updateFollowing'])
 
 const followUser = async () => {
+    props.updateFollowing(true);
+
     await supabase
         .from('followers_following')
         .insert({
             follower_id: user.value.id,
             following_id: props.user.id
         })
+
 }
 const unfollowUser = async () => {
+    props.updateFollowing(false);
+
     await supabase
         .from('followers_following')
         .delete()
