@@ -4,7 +4,7 @@ import ImageGallery from './ImageGallery.vue';
 import UserBar from './UserBar.vue';
 import { supabase } from '../supabase'
 import { useRoute } from 'vue-router'
-import { ref, onMounted, watch } from 'vue'
+import { ref, reactive, onMounted, watch } from 'vue'
 import { useUserStore } from '../stores/users'
 import { storeToRefs } from 'pinia';
 
@@ -17,9 +17,35 @@ const user = ref(null)
 const posts = ref([])
 const loading = ref(false)
 const isFollowing = ref(false)
+const userInfo = reactive({
+    posts: null,
+    followers: null,
+    following: null
+})
 
 const addNewPost = (post) => {
     posts.value.unshift(post)
+}
+
+const updateFollowing = (follow) => {
+    isFollowing.value = follow
+}
+
+const fetchFollowerCount = async () => {
+    const { count } = await supabase
+        .from('followers_following')
+        .select('*', { count: 'exact' })
+        .eq('following_id', user.value.id)
+
+    return count
+}
+const fetchFollowingCount = async () => {
+    const { count } = await supabase
+        .from('followers_following')
+        .select('*', { count: 'exact' })
+        .eq('follower_id', user.value.id)
+
+    return count
 }
 
 const fetchData = async () => {
@@ -45,8 +71,13 @@ const fetchData = async () => {
 
 
     posts.value = postsData
-
     await fetchFollowingData();
+    const followerCount = await fetchFollowerCount();
+    const followingCount = await fetchFollowingCount();
+
+    userInfo.followers = followerCount
+    userInfo.following = followingCount
+    userInfo.posts = posts.value.length
 
     loading.value = false
 }
@@ -79,11 +110,8 @@ watch(loggedInUser, () => {
 <template>
     <Container>
         <div class="profile-container" v-if="!loading">
-            <UserBar :key="$route.params.username" :user="user" :isFollowing="isFollowing" :userInfo="{
-                    posts: 0,
-                    followers: 200,
-                    following: 4698
-                }" :addNewPost="addNewPost" />
+            <UserBar :key="$route.params.username" :user="user" :isFollowing="isFollowing" :userInfo="userInfo"
+                :addNewPost="addNewPost" :updateFollowing="updateFollowing" />
             <ImageGallery :posts="posts" />
         </div>
         <div v-else class="spinner">
